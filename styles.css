@@ -68,7 +68,9 @@ h1 {
     border-color: #667eea;
 }
 
-#searchBtn {
+#searchBtn,
+#saveNotesBtn,
+#okBtn {
     padding: 12px 30px;
     background: #667eea;
     color: white;
@@ -80,7 +82,9 @@ h1 {
     transition: background 0.3s;
 }
 
-#searchBtn:hover {
+#searchBtn:hover,
+#saveNotesBtn:hover,
+#okBtn:hover {
     background: #764ba2;
 }
 
@@ -131,13 +135,69 @@ h1 {
     background: #764ba2;
 }
 
-@media (max-width: 600px) {
+.work-item-content {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-key {
+    background: #f8f9fa;
+    padding: 10px 14px;
+    font-weight: 700;
+    color: #1f3a8a;
+}
+
+.detail-value {
+    padding: 10px 14px;
+    color: #222;
+}
+
+.work-item-notes label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: #1f3a8a;
+}
+
+#caseNotesInput {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 16px;
+}
+
+.work-item-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+@media (max-width: 700px) {
     .screen {
         padding: 20px;
     }
 
     .search-box {
         flex-direction: column;
+    }
+
+    .detail-row {
+        grid-template-columns: 1fr;
     }
 
     h1 {

@@ -8,7 +8,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Search Screen -->
         <div id="searchScreen" class="screen active">
             <h1>Application Search</h1>
             <div class="search-box">
@@ -22,13 +21,26 @@
             </div>
         </div>
 
-        <!-- Agent Queue Screen -->
         <div id="agentQueueScreen" class="screen">
             <button class="back-btn" onclick="goBackToSearch()">← Back to Search</button>
-            <h1>Agent Queue</h1>
-            <div id="searchResults" class="results-container line-items"></div>
+            <h1>Work Queue</h1>
+            <div id="searchResults" class="results-container"></div>
             <div id="noResults" class="no-results" style="display: none;">
                 No applications found. Please try a different search term.
+            </div>
+        </div>
+
+        <div id="workItemScreen" class="screen">
+            <button class="back-btn" onclick="goBackToQueue()">← Back to Work Queue</button>
+            <h1>Work Item</h1>
+            <div id="workItemContent" class="work-item-content"></div>
+            <div class="work-item-notes">
+                <label for="caseNotesInput">Notes</label>
+                <textarea id="caseNotesInput" rows="6" placeholder="Enter case notes..."></textarea>
+            </div>
+            <div class="work-item-actions">
+                <button id="saveNotesBtn" onclick="saveWorkItemNotes()">Save</button>
+                <button id="okBtn" onclick="okAndReturn()">OK</button>
             </div>
         </div>
     </div>
