@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Search System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Search Screen -->
+        <div id="searchScreen" class="screen active">
+            <h1>Application Search</h1>
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search by Name, Application ID, SSN, Product, or Agent ID..."
+                    autocomplete="off"
+                >
+                <button id="searchBtn" onclick="performSearch()">Search</button>
+            </div>
+            <div id="searchResults" class="results-container"></div>
+            <div id="noResults" class="no-results" style="display: none;">
+                No applications found. Please try a different search term.
+            </div>
+        </div>
+
+        <!-- Details Screen -->
+        <div id="detailsScreen" class="screen">
+            <button class="back-btn" onclick="goBack()">← Back to Search</button>
+            <div id="detailsContent" class="details-content"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

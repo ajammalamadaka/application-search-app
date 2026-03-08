@@ -1,0 +1,59 @@
+{
+  "applications": [
+    {
+      "ApplicationID": "APP1001",
+      "LastName": "Smith",
+      "FirstName": "John",
+      "SSN": "123-45-6789",
+      "ApplicationStatus": "Pending",
+      "DateOfApplicationSubmitted": "2026-03-01",
+      "Product": "Personal Loan",
+      "ProductType": "Unsecured",
+      "AgentID": "AGT001"
+    },
+    {
+      "ApplicationID": "APP1002",
+      "LastName": "Johnson",
+      "FirstName": "Emily",
+      "SSN": "234-56-7890",
+      "ApplicationStatus": "Approved",
+      "DateOfApplicationSubmitted": "2026-02-27",
+      "Product": "Credit Card",
+      "ProductType": "Revolving Credit",
+      "AgentID": "AGT002"
+    },
+    {
+      "ApplicationID": "APP1003",
+      "LastName": "Williams",
+      "FirstName": "Michael",
+      "SSN": "345-67-8901",
+      "ApplicationStatus": "Rejected",
+      "DateOfApplicationSubmitted": "2026-02-25",
+      "Product": "Auto Loan",
+      "ProductType": "Secured",
+      "AgentID": "AGT003"
+    },
+    {
+      "ApplicationID": "APP1004",
+      "LastName": "Brown",
+      "FirstName": "Sarah",
+      "SSN": "456-78-9012",
+      "ApplicationStatus": "Under Review",
+      "DateOfApplicationSubmitted": "2026-03-03",
+      "Product": "Mortgage",
+      "ProductType": "Home Loan",
+      "AgentID": "AGT001"
+    },
+    {
+      "ApplicationID": "APP1005",
+      "LastName": "Davis",
+      "FirstName": "Robert",
+      "SSN": "567-89-0123",
+      "ApplicationStatus": "Pending",
+      "DateOfApplicationSubmitted": "2026-03-04",
+      "Product": "Business Loan",
+      "ProductType": "Commercial",
+      "AgentID": "AGT004"
+    }
+  ]
+}
