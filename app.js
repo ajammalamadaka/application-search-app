@@ -1,5 +1,4 @@
 let allApplications = [];
-let currentRecord = null;
 
 // Load data when page loads
 document.addEventListener('DOMContentLoaded', async () => {
@@ -22,10 +21,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function performSearch() {
     const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
-    
+
     if (!searchTerm) {
         document.getElementById('searchResults').innerHTML = '';
         document.getElementById('noResults').style.display = 'none';
+        switchScreen('searchScreen', 'agentQueueScreen');
         return;
     }
 
@@ -43,6 +43,7 @@ function performSearch() {
     });
 
     displayResults(results);
+    switchScreen('searchScreen', 'agentQueueScreen');
 }
 
 function displayResults(results) {
@@ -57,68 +58,108 @@ function displayResults(results) {
 
     noResults.style.display = 'none';
     resultsContainer.innerHTML = results.map(app => `
-        <div class="result-card" onclick="viewDetails('${app.ApplicationID}')">
-            <h3>${app.FirstName} ${app.LastName}</h3>
-            <p><strong>App ID:</strong> ${app.ApplicationID}</p>
-            <p><strong>Status:</strong> ${app.ApplicationStatus}</p>
-            <p><strong>Product:</strong> ${app.Product}</p>
-            <p><strong>Agent:</strong> ${app.AgentID}</p>
-        </div>
+        <button class="result-line" onclick="openRecordWindow('${app.ApplicationID}')">
+            ${escapeHtml(app.ApplicationID)} | ${escapeHtml(app.FirstName)} ${escapeHtml(app.LastName)} | ${escapeHtml(app.ApplicationStatus)}
+        </button>
     `).join('');
 }
 
-function viewDetails(applicationId) {
-    currentRecord = allApplications.find(app => app.ApplicationID === applicationId);
-    
-    if (!currentRecord) return;
+function openRecordWindow(applicationId) {
+    const record = allApplications.find(app => app.ApplicationID === applicationId);
 
-    const detailsContent = document.getElementById('detailsContent');
-    detailsContent.innerHTML = `
-        <div class="detail-title">${currentRecord.FirstName} ${currentRecord.LastName} - Application Details</div>
-        <div class="detail-row">
-            <span class="detail-label">Application ID:</span>
-            <span class="detail-value">${currentRecord.ApplicationID}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">First Name:</span>
-            <span class="detail-value">${currentRecord.FirstName}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Last Name:</span>
-            <span class="detail-value">${currentRecord.LastName}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">SSN:</span>
-            <span class="detail-value">${currentRecord.SSN}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Application Status:</span>
-            <span class="detail-value">${currentRecord.ApplicationStatus}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Date of Application Submitted:</span>
-            <span class="detail-value">${currentRecord.DateOfApplicationSubmitted}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Product:</span>
-            <span class="detail-value">${currentRecord.Product}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Product Type:</span>
-            <span class="detail-value">${currentRecord.ProductType}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Agent ID:</span>
-            <span class="detail-value">${currentRecord.AgentID}</span>
-        </div>
-    `;
+    if (!record) {
+        return;
+    }
 
-    // Switch to details screen
-    document.getElementById('searchScreen').classList.remove('active');
-    document.getElementById('detailsScreen').classList.add('active');
+    const detailRows = Object.entries(record)
+        .map(([key, value]) => `
+            <tr>
+                <td>${escapeHtml(key)}</td>
+                <td>${escapeHtml(String(value ?? ''))}</td>
+            </tr>
+        `)
+        .join('');
+
+    const popup = window.open('', '_blank', 'width=700,height=600,resizable=yes,scrollbars=yes');
+    if (!popup) {
+        alert('Popup was blocked. Please allow popups and try again.');
+        return;
+    }
+
+    popup.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Record Details</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 24px;
+                    color: #222;
+                }
+                h2 {
+                    margin: 0 0 16px;
+                    color: #1f3a8a;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                }
+                td {
+                    border: 1px solid #ddd;
+                    padding: 10px;
+                    vertical-align: top;
+                }
+                td:first-child {
+                    width: 38%;
+                    font-weight: 700;
+                    background: #f8fafc;
+                }
+                .ok-btn {
+                    background: #1f3a8a;
+                    color: #fff;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 10px 18px;
+                    font-size: 14px;
+                    cursor: pointer;
+                }
+                .ok-btn:hover {
+                    background: #172554;
+                }
+            </style>
+        </head>
+        <body>
+            <h2>Application ${escapeHtml(record.ApplicationID)}</h2>
+            <table>
+                <tbody>
+                    ${detailRows}
+                </tbody>
+            </table>
+            <button class="ok-btn" onclick="if (window.opener) { window.opener.focus(); } window.close();">OK</button>
+        </body>
+        </html>
+    `);
+    popup.document.close();
 }
 
-function goBack() {
-    document.getElementById('detailsScreen').classList.remove('active');
-    document.getElementById('searchScreen').classList.add('active');
+function goBackToSearch() {
+    switchScreen('agentQueueScreen', 'searchScreen');
+}
+
+function switchScreen(hideId, showId) {
+    document.getElementById(hideId).classList.remove('active');
+    document.getElementById(showId).classList.add('active');
+}
+
+function escapeHtml(value) {
+    return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 }
