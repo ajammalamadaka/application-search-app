@@ -8,7 +8,7 @@ const ROOT = __dirname;
 const DB_PATH = path.join(ROOT, 'db.json');
 const RUNTIME_DB_PATH = path.join(ROOT, 'db.runtime.json');
 const PUBLIC_FILES = new Set(['/index.html', '/app.js', '/styles.css']);
-const TRUSTED_ORIGINS = new Set(['http://127.0.0.1:8080', 'http://localhost:8080']);
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1']);
 
 const contentTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -25,7 +25,7 @@ function setSecurityHeaders(res) {
 
 function setCorsHeaders(req, res) {
   const origin = req.headers.origin;
-  if (origin && TRUSTED_ORIGINS.has(origin)) {
+  if (origin && isTrustedOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   }
@@ -103,13 +103,22 @@ async function parseRequestBody(req) {
   return JSON.parse(body);
 }
 
+function isTrustedOrigin(origin) {
+  try {
+    const url = new URL(origin);
+    return LOOPBACK_HOSTS.has(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
 function isTrustedWriteRequest(req) {
   const origin = req.headers.origin;
   if (!origin) {
     return true;
   }
 
-  return TRUSTED_ORIGINS.has(origin);
+  return isTrustedOrigin(origin);
 }
 
 async function handleApi(req, res, pathname) {
