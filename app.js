@@ -1,5 +1,21 @@
 let allApplications = [];
 let currentWorkItemId = null;
+const API_ORIGIN = resolveApiOrigin();
+
+function resolveApiOrigin() {
+    const isFileProtocol = window.location.protocol === 'file:';
+    const isNodeServerOrigin = window.location.hostname === 'localhost' && window.location.port === '8080';
+
+    if (isFileProtocol || !isNodeServerOrigin) {
+        return 'http://localhost:8080';
+    }
+
+    return window.location.origin;
+}
+
+function apiUrl(path) {
+    return `${API_ORIGIN}${path}`;
+}
 
 // Load data when page loads
 document.addEventListener('DOMContentLoaded', async () => {
@@ -15,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadApplications() {
     try {
         // Prefer API when running with local server; fallback to direct json for static mode.
-        const response = await fetch('/api/applications');
+        const response = await fetch(apiUrl('/api/applications'));
         if (!response.ok) {
             throw new Error('API not available');
         }
@@ -118,7 +134,7 @@ async function saveWorkItemNotes(showSuccessMessage = true) {
     record['Case Notes'] = notesValue;
 
     try {
-        const response = await fetch(`/api/applications/${encodeURIComponent(currentWorkItemId)}/notes`, {
+        const response = await fetch(apiUrl(`/api/applications/${encodeURIComponent(currentWorkItemId)}/notes`), {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -137,7 +153,7 @@ async function saveWorkItemNotes(showSuccessMessage = true) {
         return true;
     } catch (error) {
         console.error('Error saving notes:', error);
-        alert('Unable to save to db.json. Start the app with: node server.js');
+        alert(`Unable to save to db.json. Ensure the API server is running at ${API_ORIGIN}. Start it with: node server.js`);
         return false;
     }
 }
