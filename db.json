@@ -10,7 +10,10 @@
       "Product": "Personal Loan",
       "ProductType": "Unsecured",
       "AgentID": "AGT001",
-      "Case Notes": "Initial verification complete; awaiting income document upload."
+      "Case Notes": "Initial verification complete; awaiting income document upload.",
+      "Credit Notes": "Credit Score is 720",
+      "Underwriter Notes": "Pending Documentation",
+      "Process Notes": "Pending Documents Upload"
     },
     {
       "ApplicationID": "APP1002",
@@ -22,7 +25,10 @@
       "Product": "Credit Card",
       "ProductType": "Revolving Credit",
       "AgentID": "AGT002",
-      "Case Notes": "Approved after credit check and identity validation."
+      "Case Notes": "Approved after credit check and identity validation.",
+      "Credit Notes": "Credit Score is Very Good",
+      "Underwriter Notes": "Pending Credit Decisioning",
+      "Process Notes": "Documentation Complete"
     },
     {
       "ApplicationID": "APP1003",
@@ -34,7 +40,10 @@
       "Product": "Auto Loan",
       "ProductType": "Secured",
       "AgentID": "AGT003",
-      "Case Notes": "Declined due to debt-to-income ratio above threshold."
+      "Case Notes": "Declined due to debt-to-income ratio above threshold.",
+      "Credit Notes": "Credit Score is Good",
+      "Underwriter Notes": "Pending Review",
+      "Process Notes": "Underwriting Complete"
     },
     {
       "ApplicationID": "APP1004",
@@ -46,7 +55,10 @@
       "Product": "Mortgage",
       "ProductType": "Home Loan",
       "AgentID": "AGT001",
-      "Case Notes": "Underwriter requested updated property appraisal."
+      "Case Notes": "Underwriter requested updated property appraisal.",
+      "Credit Notes": "Credit Score is 720",
+      "Underwriter Notes": "Pending Documentation",
+      "Process Notes": "Underwriting in Review"
     },
     {
       "ApplicationID": "APP1005",
@@ -58,7 +70,10 @@
       "Product": "Business Loan",
       "ProductType": "Commercial",
       "AgentID": "AGT004",
-      "Case Notes": "Pending review of 2 years of business tax returns."
+      "Case Notes": "Pending review of 2 years of business tax returns.",
+      "Credit Notes": "Credit Score is Good",
+      "Underwriter Notes": "Pending Review",
+      "Process Notes": "Pending Documents Upload"
     }
   ]
 }
