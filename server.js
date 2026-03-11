@@ -5,6 +5,7 @@ const path = require('path');
 const PORT = process.env.PORT || 8080;
 const ROOT = __dirname;
 const DB_PATH = path.join(ROOT, 'db.json');
+const RUNTIME_DB_PATH = path.join(ROOT, 'db.runtime.json');
 
 const contentTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -26,12 +27,36 @@ function sendJson(res, statusCode, payload) {
 }
 
 async function readDb() {
-  const raw = await fs.readFile(DB_PATH, 'utf8');
-  return JSON.parse(raw);
+  try {
+    const raw = await fs.readFile(RUNTIME_DB_PATH, 'utf8');
+    return JSON.parse(raw);
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+
+    const raw = await fs.readFile(DB_PATH, 'utf8');
+    const data = JSON.parse(raw);
+    await writeDb(data);
+    return data;
+  }
 }
 
 async function writeDb(data) {
-  await fs.writeFile(DB_PATH, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+  await fs.writeFile(RUNTIME_DB_PATH, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+}
+
+async function ensureRuntimeDb() {
+  try {
+    await fs.access(RUNTIME_DB_PATH);
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+
+    const raw = await fs.readFile(DB_PATH, 'utf8');
+    await fs.writeFile(RUNTIME_DB_PATH, `${JSON.stringify(JSON.parse(raw), null, 2)}\n`, 'utf8');
+  }
 }
 
 async function parseRequestBody(req) {
@@ -125,6 +150,14 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+ensureRuntimeDb()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+      console.log(`Runtime data file: ${RUNTIME_DB_PATH}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to initialize runtime database:', error);
+    process.exit(1);
+  });
