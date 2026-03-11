@@ -11,6 +11,7 @@
       "ProductType": "Unsecured",
       "AgentID": "AGT001",
       "Case Notes": "Initial verification complete; awaiting income document upload.",
+      "Credit Score": 720,
       "Credit Notes": "Credit Score is 720",
       "Underwriter Notes": "Pending Documentation",
       "Process Notes": "Pending Documents Upload"
@@ -26,6 +27,7 @@
       "ProductType": "Revolving Credit",
       "AgentID": "AGT002",
       "Case Notes": "Approved after credit check and identity validation.",
+      "Credit Score": 781,
       "Credit Notes": "Credit Score is Very Good",
       "Underwriter Notes": "Pending Credit Decisioning",
       "Process Notes": "Documentation Complete"
@@ -41,6 +43,7 @@
       "ProductType": "Secured",
       "AgentID": "AGT003",
       "Case Notes": "Declined due to debt-to-income ratio above threshold.",
+      "Credit Score": 645,
       "Credit Notes": "Credit Score is Good",
       "Underwriter Notes": "Pending Review",
       "Process Notes": "Underwriting Complete"
@@ -56,6 +59,7 @@
       "ProductType": "Home Loan",
       "AgentID": "AGT001",
       "Case Notes": "Underwriter requested updated property appraisal.",
+      "Credit Score": 734,
       "Credit Notes": "Credit Score is 720",
       "Underwriter Notes": "Pending Documentation",
       "Process Notes": "Underwriting in Review"
@@ -71,6 +75,7 @@
       "ProductType": "Commercial",
       "AgentID": "AGT004",
       "Case Notes": "Pending review of 2 years of business tax returns.",
+      "Credit Score": 668,
       "Credit Notes": "Credit Score is Good",
       "Underwriter Notes": "Pending Review",
       "Process Notes": "Pending Documents Upload"
