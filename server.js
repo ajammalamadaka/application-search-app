@@ -3,9 +3,12 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const PORT = process.env.PORT || 8080;
+const HOST = process.env.HOST || '127.0.0.1';
 const ROOT = __dirname;
 const DB_PATH = path.join(ROOT, 'db.json');
 const RUNTIME_DB_PATH = path.join(ROOT, 'db.runtime.json');
+const PUBLIC_FILES = new Set(['/index.html', '/app.js', '/styles.css']);
+const TRUSTED_ORIGINS = new Set(['http://127.0.0.1:8080', 'http://localhost:8080']);
 
 const contentTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -14,16 +17,44 @@ const contentTypes = {
   '.json': 'application/json; charset=utf-8'
 };
 
-function setCorsHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+function setSecurityHeaders(res) {
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8080 http://localhost:8080; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+}
+
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin;
+  if (origin && TRUSTED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-function sendJson(res, statusCode, payload) {
-  setCorsHeaders(res);
+function sendJson(req, res, statusCode, payload) {
+  setSecurityHeaders(res);
+  setCorsHeaders(req, res);
   res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload));
+}
+
+function getLoanDecision(creditScore) {
+  if (creditScore < 600) {
+    return 'Declined';
+  }
+
+  if (creditScore < 650) {
+    return 'Needs Review';
+  }
+
+  if (creditScore > 700) {
+    return 'Approved';
+  }
+
+  return 'Needs Review';
 }
 
 async function readDb() {
@@ -72,15 +103,54 @@ async function parseRequestBody(req) {
   return JSON.parse(body);
 }
 
+function isTrustedWriteRequest(req) {
+  const origin = req.headers.origin;
+  if (!origin) {
+    return true;
+  }
+
+  return TRUSTED_ORIGINS.has(origin);
+}
+
 async function handleApi(req, res, pathname) {
   if (req.method === 'GET' && pathname === '/api/applications') {
     const db = await readDb();
-    sendJson(res, 200, { applications: db.applications || [] });
+    sendJson(req, res, 200, { applications: db.applications || [] });
+    return true;
+  }
+
+  const decisionMatch = pathname.match(/^\/api\/applications\/([^/]+)\/loan-decision$/);
+  if (req.method === 'GET' && decisionMatch) {
+    const applicationId = decodeURIComponent(decisionMatch[1]);
+    const db = await readDb();
+    const application = (db.applications || []).find((app) => app.ApplicationID === applicationId);
+
+    if (!application) {
+      sendJson(req, res, 404, { error: 'Application not found.' });
+      return true;
+    }
+
+    const creditScore = Number(application['Credit Score']);
+    if (!Number.isFinite(creditScore)) {
+      sendJson(req, res, 422, { error: 'Credit Score is missing or invalid.' });
+      return true;
+    }
+
+    sendJson(req, res, 200, {
+      applicationId,
+      creditScore,
+      loanDecision: getLoanDecision(creditScore)
+    });
     return true;
   }
 
   const notesMatch = pathname.match(/^\/api\/applications\/([^/]+)\/notes$/);
   if (req.method === 'PUT' && notesMatch) {
+    if (!isTrustedWriteRequest(req)) {
+      sendJson(req, res, 403, { error: 'Writes are restricted to trusted local origins.' });
+      return true;
+    }
+
     const applicationId = decodeURIComponent(notesMatch[1]);
     const body = await parseRequestBody(req);
     const caseNotes = typeof body.caseNotes === 'string' ? body.caseNotes : '';
@@ -89,14 +159,14 @@ async function handleApi(req, res, pathname) {
     const index = (db.applications || []).findIndex((app) => app.ApplicationID === applicationId);
 
     if (index === -1) {
-      sendJson(res, 404, { error: 'Application not found.' });
+      sendJson(req, res, 404, { error: 'Application not found.' });
       return true;
     }
 
     db.applications[index]['Case Notes'] = caseNotes;
     await writeDb(db);
 
-    sendJson(res, 200, {
+    sendJson(req, res, 200, {
       success: true,
       application: db.applications[index]
     });
@@ -108,27 +178,30 @@ async function handleApi(req, res, pathname) {
 
 async function handleStatic(req, res, pathname) {
   const requestedPath = pathname === '/' ? '/index.html' : pathname;
-  const safePath = path.normalize(requestedPath).replace(/^\.\.(\/|\\|$)/, '');
-  const filePath = path.join(ROOT, safePath);
+  const normalizedPath = path.posix.normalize(requestedPath);
 
-  if (!filePath.startsWith(ROOT)) {
-    sendJson(res, 403, { error: 'Forbidden' });
+  if (!PUBLIC_FILES.has(normalizedPath)) {
+    sendJson(req, res, 404, { error: 'Not found' });
     return;
   }
 
+  const filePath = path.join(ROOT, normalizedPath.slice(1));
+
   try {
+    setSecurityHeaders(res);
     const content = await fs.readFile(filePath);
     const ext = path.extname(filePath);
     res.writeHead(200, { 'Content-Type': contentTypes[ext] || 'application/octet-stream' });
     res.end(content);
   } catch {
-    sendJson(res, 404, { error: 'Not found' });
+    sendJson(req, res, 404, { error: 'Not found' });
   }
 }
 
 const server = http.createServer(async (req, res) => {
   try {
-    setCorsHeaders(res);
+    setSecurityHeaders(res);
+    setCorsHeaders(req, res);
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
@@ -146,14 +219,14 @@ const server = http.createServer(async (req, res) => {
 
     await handleStatic(req, res, pathname);
   } catch (error) {
-    sendJson(res, 500, { error: error.message || 'Internal server error' });
+    sendJson(req, res, 500, { error: 'Internal server error' });
   }
 });
 
 ensureRuntimeDb()
   .then(() => {
-    server.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
+    server.listen(PORT, HOST, () => {
+      console.log(`Server running at http://${HOST}:${PORT}`);
       console.log(`Runtime data file: ${RUNTIME_DB_PATH}`);
     });
   })

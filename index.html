@@ -32,7 +32,7 @@
             </section>
 
             <section id="recordScreen" class="screen">
-                <button class="back-btn" type="button" onclick="goBackToQueue()">Back to Work Queue</button>
+                <button id="backToQueueBtn" class="back-btn" type="button">Back to Work Queue</button>
 
                 <div class="page-header record-header">
                     <div>
@@ -42,11 +42,13 @@
                     <div id="recordMeta" class="record-meta"></div>
                 </div>
 
+                <div id="loanDecisionAlert" class="loan-alert" hidden></div>
+
                 <div class="tabs" role="tablist" aria-label="Record tabs">
-                    <button class="tab-btn active" type="button" data-tab="details" onclick="selectTab('details')">Details</button>
-                    <button class="tab-btn" type="button" data-tab="notes" onclick="selectTab('notes')">Notes</button>
-                    <button class="tab-btn" type="button" data-tab="credit" onclick="selectTab('credit')">Credit Notes</button>
-                    <button class="tab-btn" type="button" data-tab="underwriter" onclick="selectTab('underwriter')">Underwriter Notes</button>
+                    <button class="tab-btn active" type="button" data-tab="details">Details</button>
+                    <button class="tab-btn" type="button" data-tab="notes">Notes</button>
+                    <button class="tab-btn" type="button" data-tab="credit">Credit Notes</button>
+                    <button class="tab-btn" type="button" data-tab="underwriter">Underwriter Notes</button>
                 </div>
 
                 <div class="tab-panels">

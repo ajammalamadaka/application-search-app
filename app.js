@@ -6,7 +6,7 @@ const HIDDEN_DETAIL_FIELDS = new Set(['Credit Notes', 'Underwriter Notes', 'Proc
 
 function resolveApiOrigin() {
     const isFileProtocol = window.location.protocol === 'file:';
-    const isNodeServerOrigin = window.location.hostname === 'localhost' && window.location.port === '8080';
+    const isNodeServerOrigin = ['localhost', '127.0.0.1'].includes(window.location.hostname) && window.location.port === '8080';
 
     if (isFileProtocol || !isNodeServerOrigin) {
         return 'http://localhost:8080';
@@ -20,9 +20,34 @@ function apiUrl(path) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    wireUiEvents();
     await loadApplications();
     renderQueue();
 });
+
+function wireUiEvents() {
+    document.getElementById('queueList').addEventListener('click', (event) => {
+        const row = event.target.closest('.queue-row');
+        if (!row) {
+            return;
+        }
+
+        openRecord(row.dataset.applicationId || '');
+    });
+
+    document.getElementById('backToQueueBtn').addEventListener('click', () => {
+        goBackToQueue();
+    });
+
+    document.querySelector('.tabs').addEventListener('click', (event) => {
+        const button = event.target.closest('.tab-btn');
+        if (!button) {
+            return;
+        }
+
+        selectTab(button.dataset.tab || 'details');
+    });
+}
 
 async function loadApplications() {
     try {
@@ -57,7 +82,7 @@ function renderQueue() {
 
     noRecords.hidden = true;
     queueList.innerHTML = allApplications.map((application) => `
-        <button class="queue-row" type="button" onclick="openRecord('${escapeForAttribute(application.ApplicationID)}')">
+        <button class="queue-row" type="button" data-application-id="${escapeHtml(String(application.ApplicationID ?? ''))}">
             ${QUEUE_COLUMNS.map((column) => `
                 <span class="queue-cell" data-label="${escapeHtml(formatLabel(column))}">
                     ${escapeHtml(String(application[column] ?? ''))}
@@ -86,8 +111,33 @@ function openRecord(applicationId) {
     document.getElementById('creditNotesContent').textContent = application['Credit Notes'] || '';
     document.getElementById('underwriterNotesContent').textContent = application['Underwriter Notes'] || '';
 
+    loadLoanDecision(applicationId);
     selectTab('details');
     switchScreen('queueScreen', 'recordScreen');
+}
+
+async function loadLoanDecision(applicationId) {
+    const alertBox = document.getElementById('loanDecisionAlert');
+    alertBox.hidden = false;
+    alertBox.className = 'loan-alert';
+    alertBox.textContent = 'Loan Decision: Loading...';
+
+    try {
+        const response = await fetch(apiUrl(`/api/applications/${encodeURIComponent(applicationId)}/loan-decision`));
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(payload.error || 'Failed to load loan decision.');
+        }
+
+        const decisionClass = formatDecisionClass(payload.loanDecision);
+        alertBox.className = `loan-alert ${decisionClass}`;
+        alertBox.textContent = `Loan Decision: ${payload.loanDecision} (Credit Score: ${payload.creditScore})`;
+    } catch (error) {
+        console.error('Error loading loan decision:', error);
+        alertBox.className = 'loan-alert needs-review';
+        alertBox.textContent = error.message || 'Loan Decision: unavailable';
+    }
 }
 
 function renderDetails(application) {
@@ -117,6 +167,7 @@ function selectTab(tabName) {
 
 function goBackToQueue() {
     currentApplicationId = null;
+    document.getElementById('loanDecisionAlert').hidden = true;
     switchScreen('recordScreen', 'queueScreen');
 }
 
@@ -129,8 +180,16 @@ function formatLabel(value) {
     return value.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
-function escapeForAttribute(value) {
-    return String(value).replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+function formatDecisionClass(value) {
+    if (value === 'Approved') {
+        return 'approved';
+    }
+
+    if (value === 'Declined') {
+        return 'declined';
+    }
+
+    return 'needs-review';
 }
 
 function escapeHtml(value) {

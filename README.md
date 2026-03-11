@@ -62,6 +62,23 @@ The app will open in your browser at `http://localhost:8080`
 2. Open `index.html` directly in your web browser
 3. The app will work locally without any server setup
 
+## 🐍 Local Python Helper
+
+This project keeps Python-only tooling in the local virtual environment at `.venv/bin/python`.
+
+Use the helper script from the repo root instead of remembering the full path:
+
+```bash
+./run-python --version
+./run-python /Users/arunahome/.codex/skills/.system/skill-creator/scripts/quick_validate.py .codex/skills/code-reviewer-vulnerability
+```
+
+Direct path if needed:
+
+```bash
+.venv/bin/python
+```
+
 ## 📱 Usage
 
 ### Searching
