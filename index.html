@@ -3,45 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Search System</title>
+    <title>Work Queue</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <div id="searchScreen" class="screen active">
-            <h1>Application Search</h1>
-            <div class="search-box">
-                <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="Search by Name, Application ID, SSN, Product, or Agent ID..."
-                    autocomplete="off"
-                >
-                <button id="searchBtn" onclick="performSearch()">Search</button>
-            </div>
-        </div>
+    <div class="page-shell">
+        <div class="container">
+            <section id="queueScreen" class="screen active">
+                <div class="page-header">
+                    <div>
+                        <p class="eyebrow">Application Records</p>
+                        <h1>Work Queue</h1>
+                    </div>
+                </div>
 
-        <div id="agentQueueScreen" class="screen">
-            <button class="back-btn" onclick="goBackToSearch()">← Back to Search</button>
-            <h1>Work Queue</h1>
-            <div id="searchResults" class="results-container"></div>
-            <div id="noResults" class="no-results" style="display: none;">
-                No applications found. Please try a different search term.
-            </div>
-        </div>
+                <div class="queue-card">
+                    <div class="queue-grid queue-grid-header">
+                        <div>Application ID</div>
+                        <div>Last Name</div>
+                        <div>First Name</div>
+                        <div>Status</div>
+                        <div>Product Type</div>
+                        <div>Agent ID</div>
+                    </div>
+                    <div id="queueList" class="queue-list"></div>
+                    <div id="noRecords" class="empty-state" hidden>No application records available.</div>
+                </div>
+            </section>
 
-        <div id="workItemScreen" class="screen">
-            <button class="back-btn" onclick="goBackToQueue()">← Back to Work Queue</button>
-            <h1>Work Item</h1>
-            <div id="workItemContent" class="work-item-content"></div>
-            <div class="work-item-notes">
-                <label for="caseNotesInput">Notes</label>
-                <textarea id="caseNotesInput" rows="6" placeholder="Enter case notes..."></textarea>
-            </div>
-            <div class="work-item-actions">
-                <button id="saveNotesBtn" onclick="saveWorkItemNotes()">Save</button>
-                <button id="okBtn" onclick="okAndReturn()">OK</button>
-            </div>
+            <section id="recordScreen" class="screen">
+                <button class="back-btn" type="button" onclick="goBackToQueue()">Back to Work Queue</button>
+
+                <div class="page-header record-header">
+                    <div>
+                        <p class="eyebrow">Selected Record</p>
+                        <h1 id="recordTitle">Application</h1>
+                    </div>
+                    <div id="recordMeta" class="record-meta"></div>
+                </div>
+
+                <div class="tabs" role="tablist" aria-label="Record tabs">
+                    <button class="tab-btn active" type="button" data-tab="details" onclick="selectTab('details')">Details</button>
+                    <button class="tab-btn" type="button" data-tab="notes" onclick="selectTab('notes')">Notes</button>
+                    <button class="tab-btn" type="button" data-tab="credit" onclick="selectTab('credit')">Credit Notes</button>
+                    <button class="tab-btn" type="button" data-tab="underwriter" onclick="selectTab('underwriter')">Underwriter Notes</button>
+                </div>
+
+                <div class="tab-panels">
+                    <section id="tab-details" class="tab-panel active">
+                        <div id="detailsContent" class="details-card"></div>
+                    </section>
+
+                    <section id="tab-notes" class="tab-panel">
+                        <div class="note-card">
+                            <h2>Process Notes</h2>
+                            <p id="processNotesContent" class="note-text"></p>
+                        </div>
+                    </section>
+
+                    <section id="tab-credit" class="tab-panel">
+                        <div class="note-card">
+                            <h2>Credit Notes</h2>
+                            <p id="creditNotesContent" class="note-text"></p>
+                        </div>
+                    </section>
+
+                    <section id="tab-underwriter" class="tab-panel">
+                        <div class="note-card">
+                            <h2>Underwriter Notes</h2>
+                            <p id="underwriterNotesContent" class="note-text"></p>
+                        </div>
+                    </section>
+                </div>
+            </section>
         </div>
     </div>
 

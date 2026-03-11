@@ -1,6 +1,8 @@
 let allApplications = [];
-let currentWorkItemId = null;
+let currentApplicationId = null;
 const API_ORIGIN = resolveApiOrigin();
+const QUEUE_COLUMNS = ['ApplicationID', 'LastName', 'FirstName', 'ApplicationStatus', 'ProductType', 'AgentID'];
+const HIDDEN_DETAIL_FIELDS = new Set(['Credit Notes', 'Underwriter Notes', 'Process Notes']);
 
 function resolveApiOrigin() {
     const isFileProtocol = window.location.protocol === 'file:';
@@ -17,20 +19,13 @@ function apiUrl(path) {
     return `${API_ORIGIN}${path}`;
 }
 
-// Load data when page loads
 document.addEventListener('DOMContentLoaded', async () => {
     await loadApplications();
-
-    document.getElementById('searchInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
+    renderQueue();
 });
 
 async function loadApplications() {
     try {
-        // Prefer API when running with local server; fallback to direct json for static mode.
         const response = await fetch(apiUrl('/api/applications'));
         if (!response.ok) {
             throw new Error('API not available');
@@ -50,132 +45,92 @@ async function loadApplications() {
     }
 }
 
-function performSearch() {
-    const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+function renderQueue() {
+    const queueList = document.getElementById('queueList');
+    const noRecords = document.getElementById('noRecords');
 
-    if (!searchTerm) {
-        document.getElementById('searchResults').innerHTML = '';
-        document.getElementById('noResults').style.display = 'none';
-        switchScreen('searchScreen', 'agentQueueScreen');
+    if (allApplications.length === 0) {
+        queueList.innerHTML = '';
+        noRecords.hidden = false;
         return;
     }
 
-    const results = allApplications.filter((app) => {
-        return (
-            app.ApplicationID.toLowerCase().includes(searchTerm) ||
-            app.FirstName.toLowerCase().includes(searchTerm) ||
-            app.LastName.toLowerCase().includes(searchTerm) ||
-            app.SSN.includes(searchTerm) ||
-            app.Product.toLowerCase().includes(searchTerm) ||
-            app.ProductType.toLowerCase().includes(searchTerm) ||
-            app.AgentID.toLowerCase().includes(searchTerm) ||
-            app.ApplicationStatus.toLowerCase().includes(searchTerm) ||
-            String(app['Case Notes'] || '').toLowerCase().includes(searchTerm)
-        );
-    });
-
-    displayResults(results);
-    switchScreen('searchScreen', 'agentQueueScreen');
-}
-
-function displayResults(results) {
-    const resultsContainer = document.getElementById('searchResults');
-    const noResults = document.getElementById('noResults');
-
-    if (results.length === 0) {
-        resultsContainer.innerHTML = '';
-        noResults.style.display = 'block';
-        return;
-    }
-
-    noResults.style.display = 'none';
-    resultsContainer.innerHTML = results.map((app) => `
-        <button class="result-line" onclick="openWorkItem('${app.ApplicationID}')">
-            ${escapeHtml(app.ApplicationID)} | ${escapeHtml(app.FirstName)} ${escapeHtml(app.LastName)} | ${escapeHtml(app.ApplicationStatus)}
+    noRecords.hidden = true;
+    queueList.innerHTML = allApplications.map((application) => `
+        <button class="queue-row" type="button" onclick="openRecord('${escapeForAttribute(application.ApplicationID)}')">
+            ${QUEUE_COLUMNS.map((column) => `
+                <span class="queue-cell" data-label="${escapeHtml(formatLabel(column))}">
+                    ${escapeHtml(String(application[column] ?? ''))}
+                </span>
+            `).join('')}
         </button>
     `).join('');
 }
 
-function openWorkItem(applicationId) {
-    const record = allApplications.find((app) => app.ApplicationID === applicationId);
-    if (!record) {
+function openRecord(applicationId) {
+    const application = allApplications.find((item) => item.ApplicationID === applicationId);
+    if (!application) {
         return;
     }
 
-    currentWorkItemId = applicationId;
+    currentApplicationId = applicationId;
+    document.getElementById('recordTitle').textContent = `${application.ApplicationID} - ${application.FirstName} ${application.LastName}`;
+    document.getElementById('recordMeta').innerHTML = `
+        <span>${escapeHtml(application.ApplicationStatus || '')}</span>
+        <span>${escapeHtml(application.ProductType || '')}</span>
+        <span>${escapeHtml(application.AgentID || '')}</span>
+    `;
 
-    const detailRows = Object.entries(record)
-        .filter(([key]) => key !== 'Case Notes')
+    renderDetails(application);
+    document.getElementById('processNotesContent').textContent = application['Process Notes'] || '';
+    document.getElementById('creditNotesContent').textContent = application['Credit Notes'] || '';
+    document.getElementById('underwriterNotesContent').textContent = application['Underwriter Notes'] || '';
+
+    selectTab('details');
+    switchScreen('queueScreen', 'recordScreen');
+}
+
+function renderDetails(application) {
+    const detailsContent = document.getElementById('detailsContent');
+    const detailRows = Object.entries(application)
+        .filter(([key]) => !HIDDEN_DETAIL_FIELDS.has(key))
         .map(([key, value]) => `
             <div class="detail-row">
-                <div class="detail-key">${escapeHtml(key)}</div>
+                <div class="detail-key">${escapeHtml(formatLabel(key))}</div>
                 <div class="detail-value">${escapeHtml(String(value ?? ''))}</div>
             </div>
         `)
         .join('');
 
-    document.getElementById('workItemContent').innerHTML = detailRows;
-    document.getElementById('caseNotesInput').value = record['Case Notes'] || '';
-
-    switchScreen('agentQueueScreen', 'workItemScreen');
+    detailsContent.innerHTML = detailRows;
 }
 
-async function saveWorkItemNotes(showSuccessMessage = true) {
-    if (!currentWorkItemId) {
-        return false;
-    }
+function selectTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach((button) => {
+        button.classList.toggle('active', button.dataset.tab === tabName);
+    });
 
-    const notesValue = document.getElementById('caseNotesInput').value;
-    const record = allApplications.find((app) => app.ApplicationID === currentWorkItemId);
-    if (!record) {
-        return false;
-    }
-
-    record['Case Notes'] = notesValue;
-
-    try {
-        const response = await fetch(apiUrl(`/api/applications/${encodeURIComponent(currentWorkItemId)}/notes`), {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ caseNotes: notesValue })
-        });
-
-        if (!response.ok) {
-            const errorBody = await response.json().catch(() => ({}));
-            throw new Error(errorBody.error || 'Failed to save notes.');
-        }
-
-        if (showSuccessMessage) {
-            alert('Notes saved successfully.');
-        }
-        return true;
-    } catch (error) {
-        console.error('Error saving notes:', error);
-        alert(`Unable to save to db.json. Ensure the API server is running at ${API_ORIGIN}. Start it with: node server.js`);
-        return false;
-    }
-}
-
-async function okAndReturn() {
-    const saved = await saveWorkItemNotes(false);
-    if (saved) {
-        goBackToQueue();
-    }
+    document.querySelectorAll('.tab-panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.id === `tab-${tabName}`);
+    });
 }
 
 function goBackToQueue() {
-    switchScreen('workItemScreen', 'agentQueueScreen');
-}
-
-function goBackToSearch() {
-    switchScreen('agentQueueScreen', 'searchScreen');
+    currentApplicationId = null;
+    switchScreen('recordScreen', 'queueScreen');
 }
 
 function switchScreen(hideId, showId) {
     document.getElementById(hideId).classList.remove('active');
     document.getElementById(showId).classList.add('active');
+}
+
+function formatLabel(value) {
+    return value.replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
+function escapeForAttribute(value) {
+    return String(value).replaceAll('\\', '\\\\').replaceAll("'", "\\'");
 }
 
 function escapeHtml(value) {
