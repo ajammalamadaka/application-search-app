@@ -3,7 +3,7 @@ const fs = require('fs/promises');
 const path = require('path');
 
 const PORT = process.env.PORT || 8080;
-const HOST = process.env.HOST || '127.0.0.1';
+const HOST = process.env.HOST || 'localhost';
 const ROOT = __dirname;
 const DB_PATH = path.join(ROOT, 'db.json');
 const RUNTIME_DB_PATH = path.join(ROOT, 'db.runtime.json');
@@ -227,6 +227,9 @@ ensureRuntimeDb()
   .then(() => {
     server.listen(PORT, HOST, () => {
       console.log(`Server running at http://${HOST}:${PORT}`);
+      if (HOST === 'localhost') {
+        console.log(`Loopback alias: http://127.0.0.1:${PORT}`);
+      }
       console.log(`Runtime data file: ${RUNTIME_DB_PATH}`);
     });
   })
