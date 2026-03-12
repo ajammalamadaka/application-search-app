@@ -15,6 +15,43 @@
     --accent: #0f766e;
     --accent-strong: #115e59;
     --accent-soft: #d9f2ee;
+    --shell-surface: rgba(255, 253, 248, 0.9);
+    --shell-border: rgba(216, 210, 195, 0.8);
+    --shell-shadow: 0 24px 60px rgba(31, 41, 51, 0.14);
+    --theme-card-radius: 20px;
+    --theme-pill-radius: 999px;
+    --theme-highlight-bg: linear-gradient(135deg, rgba(217, 242, 238, 0.85), rgba(255, 253, 248, 0.96));
+    --theme-highlight-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.theme-work-queue-shell {
+    background: var(--shell-surface);
+    border: 1px solid var(--shell-border);
+    box-shadow: var(--shell-shadow);
+}
+
+.theme-work-queue-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--theme-card-radius);
+}
+
+.theme-work-queue-soft {
+    background: var(--panel-strong);
+    border-color: var(--line);
+    color: var(--muted);
+}
+
+.theme-work-queue-pill {
+    border-radius: var(--theme-pill-radius);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+}
+
+.theme-work-queue-accent {
+    border-left: 6px solid var(--accent);
+    background: var(--theme-highlight-bg);
+    box-shadow: var(--theme-highlight-shadow);
 }
 
 body {
@@ -33,11 +70,11 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    background: rgba(255, 253, 248, 0.9);
+    background: var(--shell-surface);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(216, 210, 195, 0.8);
+    border: 1px solid var(--shell-border);
     border-radius: 24px;
-    box-shadow: 0 24px 60px rgba(31, 41, 51, 0.14);
+    box-shadow: var(--shell-shadow);
     overflow: hidden;
 }
 
@@ -91,7 +128,7 @@ h1 {
 .note-card {
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 20px;
+    border-radius: var(--theme-card-radius);
 }
 
 .queue-grid {
@@ -158,7 +195,7 @@ h1 {
     border: 0;
     background: var(--accent);
     color: white;
-    border-radius: 999px;
+    border-radius: var(--theme-pill-radius);
     padding: 11px 18px;
     font-weight: 700;
     cursor: pointer;
@@ -176,7 +213,7 @@ h1 {
 .loan-alert {
     margin-bottom: 18px;
     padding: 16px 18px;
-    border-radius: 20px;
+    border-radius: var(--theme-card-radius);
     border: 1px solid var(--line);
     border-left: 6px solid var(--accent);
     background:
@@ -213,7 +250,7 @@ h1 {
 
 .record-meta span {
     padding: 8px 12px;
-    border-radius: 999px;
+    border-radius: var(--theme-pill-radius);
     background: var(--accent-soft);
     color: var(--accent-strong);
     font-weight: 700;
@@ -232,7 +269,7 @@ h1 {
     background: var(--panel);
     color: var(--muted);
     padding: 12px 18px;
-    border-radius: 999px;
+    border-radius: var(--theme-pill-radius);
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
