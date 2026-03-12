@@ -93,12 +93,12 @@ function renderQueue() {
 }
 
 function openRecord(applicationId) {
-    const application = allApplications.find((item) => item.ApplicationID === applicationId);
+    const application = findApplicationById(applicationId);
     if (!application) {
         return;
     }
 
-    currentApplicationId = applicationId;
+    currentApplicationId = String(application.ApplicationID ?? '');
     document.getElementById('recordTitle').textContent = `${application.ApplicationID} - ${application.FirstName} ${application.LastName}`;
     document.getElementById('recordMeta').innerHTML = `
         <span>${escapeHtml(application.ApplicationStatus || '')}</span>
@@ -111,32 +111,50 @@ function openRecord(applicationId) {
     document.getElementById('creditNotesContent').textContent = application['Credit Notes'] || '';
     document.getElementById('underwriterNotesContent').textContent = application['Underwriter Notes'] || '';
 
-    loadLoanDecision(applicationId);
+    loadLoanDecision(currentApplicationId);
     selectTab('details');
     switchScreen('queueScreen', 'recordScreen');
 }
 
 async function loadLoanDecision(applicationId) {
+    const requestedApplicationId = String(applicationId ?? '');
     const alertBox = document.getElementById('loanDecisionAlert');
     alertBox.hidden = false;
     alertBox.className = 'loan-alert';
     alertBox.textContent = 'Loan Decision: Loading...';
 
     try {
-        const response = await fetch(apiUrl(`/api/applications/${encodeURIComponent(applicationId)}/loan-decision`));
+        const response = await fetch(apiUrl(`/api/applications/${encodeURIComponent(requestedApplicationId)}/loan-decision`));
         const payload = await response.json().catch(() => ({}));
 
         if (!response.ok) {
             throw new Error(payload.error || 'Failed to load loan decision.');
         }
 
+        if (currentApplicationId !== requestedApplicationId) {
+            return;
+        }
+
         const decisionClass = formatDecisionClass(payload.loanDecision);
         alertBox.className = `loan-alert ${decisionClass}`;
         alertBox.textContent = `Loan Decision: ${payload.loanDecision} (Credit Score: ${payload.creditScore})`;
     } catch (error) {
+        const fallbackApplication = findApplicationById(requestedApplicationId);
+        const fallbackDecision = getLocalLoanDecision(fallbackApplication);
+
+        if (currentApplicationId !== requestedApplicationId) {
+            return;
+        }
+
+        if (fallbackDecision) {
+            alertBox.className = `loan-alert ${formatDecisionClass(fallbackDecision.loanDecision)}`;
+            alertBox.textContent = `Loan Decision: ${fallbackDecision.loanDecision} (Credit Score: ${fallbackDecision.creditScore})`;
+            return;
+        }
+
         console.error('Error loading loan decision:', error);
         alertBox.className = 'loan-alert needs-review';
-        alertBox.textContent = error.message || 'Loan Decision: unavailable';
+        alertBox.textContent = 'Loan Decision: unavailable';
     }
 }
 
@@ -190,6 +208,43 @@ function formatDecisionClass(value) {
     }
 
     return 'needs-review';
+}
+
+function findApplicationById(applicationId) {
+    const normalizedId = String(applicationId ?? '');
+    return allApplications.find((item) => String(item.ApplicationID ?? '') === normalizedId);
+}
+
+function getLocalLoanDecision(application) {
+    if (!application) {
+        return null;
+    }
+
+    const creditScore = Number(application['Credit Score']);
+    if (!Number.isFinite(creditScore)) {
+        return null;
+    }
+
+    return {
+        creditScore,
+        loanDecision: deriveLoanDecision(creditScore)
+    };
+}
+
+function deriveLoanDecision(creditScore) {
+    if (creditScore < 600) {
+        return 'Declined';
+    }
+
+    if (creditScore < 650) {
+        return 'Needs Review';
+    }
+
+    if (creditScore > 700) {
+        return 'Approved';
+    }
+
+    return 'Needs Review';
 }
 
 function escapeHtml(value) {
