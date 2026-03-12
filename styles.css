@@ -175,30 +175,34 @@ h1 {
 
 .loan-alert {
     margin-bottom: 18px;
-    padding: 14px 16px;
-    border-radius: 16px;
+    padding: 16px 18px;
+    border-radius: 20px;
     border: 1px solid var(--line);
-    background: var(--panel-strong);
+    border-left: 6px solid var(--accent);
+    background:
+        linear-gradient(135deg, rgba(217, 242, 238, 0.85), rgba(255, 253, 248, 0.96));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
     color: var(--ink);
     font-weight: 700;
 }
 
 .loan-alert.approved {
-    background: #dcfce7;
-    border-color: #86efac;
-    color: #166534;
+    border-left-color: var(--accent);
+    color: var(--accent-strong);
 }
 
 .loan-alert.declined {
-    background: #fee2e2;
-    border-color: #fca5a5;
-    color: #991b1b;
+    border-left-color: #8f5f3f;
+    background:
+        linear-gradient(135deg, rgba(244, 239, 227, 0.96), rgba(255, 253, 248, 0.96));
+    color: var(--ink);
 }
 
 .loan-alert.needs-review {
-    background: #fef3c7;
-    border-color: #fcd34d;
-    color: #92400e;
+    border-left-color: #c48a3a;
+    background:
+        linear-gradient(135deg, rgba(243, 239, 228, 0.96), rgba(255, 253, 248, 0.96));
+    color: var(--ink);
 }
 
 .record-meta {
