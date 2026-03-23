@@ -1,1 +1,8 @@
 db.runtime.json
+
+# Gmail AI Agent – secrets and generated files
+gmail-agent/credentials.json
+gmail-agent/token.json
+gmail-agent/.env
+gmail-agent/__pycache__/
+gmail-agent/*.pyc
